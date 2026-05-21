@@ -1,6 +1,21 @@
 # 🛡️ Bug Hunter Toolkit
 
-A comprehensive security testing and bug hunting toolkit built with Python. Designed for security researchers and bug bounty hunters to automate vulnerability detection and security assessments.
+<div align="center">
+
+![Version](https://img.shields.io/badge/version-2.0.0-blue.svg)
+![Python](https://img.shields.io/badge/python-3.11+-green.svg)
+![License](https://img.shields.io/badge/license-MIT-green.svg)
+![Security](https://img.shields.io/badge/security-testing-red.svg)
+
+**Professional Security Testing & Bug Bounty Toolkit**
+
+A comprehensive, production-ready security testing and bug hunting toolkit built with Python. Designed for security researchers, penetration testers, and bug bounty hunters to automate vulnerability detection and security assessments.
+
+[Features](#-features) • [Installation](#-installation) • [Usage](#-usage) • [Documentation](#-documentation)
+
+</div>
+
+---
 
 ## ✨ Features
 
