@@ -16,15 +16,19 @@ RUN apt-get update && apt-get install -y \
     netcat-traditional \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements and install Python dependencies
+# Copy requirements first for better caching
 COPY requirements.txt .
+
+# Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy application code
+# Copy application source code
 COPY src/ ./src/
+
+# Copy main CLI script
 COPY bug_hunter.py .
 
-# Create directories
+# Create necessary directories
 RUN mkdir -p logs wordlists
 
 # Make CLI executable

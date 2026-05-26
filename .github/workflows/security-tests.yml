@@ -134,8 +134,7 @@ jobs:
           context: .
           push: false
           tags: bug-hunter-toolkit:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          no-cache: true
 
       - name: Test Docker image
         continue-on-error: true
