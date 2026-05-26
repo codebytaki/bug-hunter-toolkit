@@ -1,0 +1,15 @@
+# Common wordlist for security testing
+admin
+administrator
+root
+test
+user
+password
+login
+api
+backup
+config
+database
+dev
+staging
+production

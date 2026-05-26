@@ -23,10 +23,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application code
 COPY src/ ./src/
 COPY bug_hunter.py .
-COPY wordlists/ ./wordlists/
 
-# Create logs directory
-RUN mkdir -p logs
+# Create directories
+RUN mkdir -p logs wordlists
 
 # Make CLI executable
 RUN chmod +x bug_hunter.py
