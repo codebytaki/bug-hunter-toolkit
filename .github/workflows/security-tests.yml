@@ -1,143 +1,133 @@
-name: Security Tests & Quality Checks
+name: Security Tests & Quality
 
 on:
   push:
-    branches: [ main, master, develop ]
+    branches: [master, main, develop]
   pull_request:
-    branches: [ main, master ]
+    branches: [master, main]
   workflow_dispatch:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  PYTHON_DEFAULT: "3.11"
 
 jobs:
+  # ── Security Scan ────────────────────────────────────────────────────────────
   security-scan:
-    name: Security Vulnerability Scan
+    name: Security Scan
     runs-on: ubuntu-latest
-    
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v5
+      - uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: ${{ env.PYTHON_DEFAULT }}
+          cache: pip
 
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install bandit safety || true
+      - name: Install scanners
+        run: pip install bandit safety ruff
 
-      - name: Run Bandit security scan
+      - name: Bandit scan
+        run: bandit -r src/ -f json -o bandit-report.json -ll
         continue-on-error: true
-        run: |
-          bandit -r src/ -f json -o bandit-report.json || echo "Bandit scan completed"
-          bandit -r src/ -f txt || echo "Bandit text report completed"
 
-      - name: Check dependencies for vulnerabilities
+      - name: Safety dependency check
+        run: safety check --json
         continue-on-error: true
-        run: |
-          safety check --json || echo "Safety check completed"
 
-      - name: Upload security reports
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4
         if: always()
-        continue-on-error: true
         with:
-          name: security-reports
+          name: security-reports-${{ github.run_id }}
           path: bandit-report.json
           if-no-files-found: ignore
 
+  # ── Code Quality ─────────────────────────────────────────────────────────────
   code-quality:
-    name: Code Quality Analysis
+    name: Code Quality
     runs-on: ubuntu-latest
-    
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v5
+      - uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: ${{ env.PYTHON_DEFAULT }}
+          cache: pip
 
-      - name: Install dependencies
-        run: |
-          pip install flake8 pylint black isort || true
+      - name: Install linters
+        run: pip install ruff flake8 black isort
 
-      - name: Run flake8
+      - name: Ruff lint
+        run: ruff check src/ --output-format=github
+
+      - name: Flake8 critical errors
+        run: flake8 src/ --count --select=E9,F63,F7,F82 --show-source --statistics
+
+      - name: Black formatting check
+        run: black --check src/
         continue-on-error: true
-        run: |
-          flake8 src/ --count --select=E9,F63,F7,F82 --show-source --statistics || echo "Flake8 completed"
-          flake8 src/ --count --exit-zero --max-complexity=10 --statistics
 
-      - name: Run pylint
+      - name: Isort import order
+        run: isort --check-only src/
         continue-on-error: true
-        run: |
-          pylint src/ --exit-zero || echo "Pylint completed"
 
-      - name: Check code formatting
-        continue-on-error: true
-        run: |
-          black --check src/ || echo "Black check completed"
-          isort --check-only src/ || echo "Isort check completed"
-
+  # ── Test Matrix ──────────────────────────────────────────────────────────────
   test:
-    name: Run Tests
+    name: Test (Python ${{ matrix.python-version }})
     runs-on: ubuntu-latest
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v5
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.9", "3.10", "3.11", "3.12"]
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: ${{ matrix.python-version }}
+          cache: pip
 
       - name: Install dependencies
         run: |
-          pip install -r requirements.txt || true
-          pip install pytest pytest-cov pytest-asyncio || true
+          pip install --upgrade pip
+          pip install requests beautifulsoup4 lxml loguru click rich dnspython
+          pip install pytest pytest-asyncio pytest-cov pytest-mock
 
       - name: Run tests
-        continue-on-error: true
-        run: |
-          pytest tests/ -v --cov=src --cov-report=xml --cov-report=html || echo "Tests completed"
+        run: pytest tests/ -v --cov=src --cov-report=xml --cov-report=term-missing
 
-      - name: Upload coverage
-        uses: codecov/codecov-action@v5
-        if: always()
-        continue-on-error: true
+      - uses: codecov/codecov-action@v4
+        if: matrix.python-version == env.PYTHON_DEFAULT
         with:
-          files: ./coverage.xml
+          files: coverage.xml
           token: ${{ secrets.CODECOV_TOKEN }}
           fail_ci_if_error: false
 
+  # ── Docker Build ──────────────────────────────────────────────────────────────
   docker-build:
-    name: Build Docker Image
+    name: Docker Build
     runs-on: ubuntu-latest
     needs: [security-scan, code-quality, test]
-    if: always()
-    
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v5
+      - uses: actions/checkout@v4
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+      - uses: docker/setup-buildx-action@v3
 
       - name: Build Docker image
         uses: docker/build-push-action@v6
         with:
           context: .
           push: false
-          tags: bug-hunter-toolkit:latest
-          no-cache: true
+          tags: bug-hunter-toolkit:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
-      - name: Test Docker image
-        continue-on-error: true
+      - name: Smoke test container
         run: |
-          docker build -t bug-hunter-toolkit:test .
-          docker run bug-hunter-toolkit:test --version || echo "Docker test completed"
+          docker build -t bht-test .
+          docker run --rm bht-test --version
+        continue-on-error: true
