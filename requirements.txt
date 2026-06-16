@@ -42,7 +42,7 @@ weasyprint==60.1
 # Data Processing
 pandas==2.1.4
 numpy==1.26.2
-python-dateutil==2.8.2
+python-dateutil==2.9.0.post0
 
 # CLI & UI
 click==8.1.7
