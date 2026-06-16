@@ -17,7 +17,7 @@ dnspython==2.4.2
 netaddr==0.10.1
 
 # Security Tools
-cryptography==41.0.7
+cryptography==49.0.0
 pycryptodome==3.19.0
 paramiko==3.4.0
 pyopenssl==23.3.0
