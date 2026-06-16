@@ -33,7 +33,6 @@ logs/
 # Documentation
 *.md
 !README.md
-!wordlists/README.md
 
 # Other
 .DS_Store

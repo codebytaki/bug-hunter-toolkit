@@ -68,3 +68,7 @@ anthropic==0.7.0
 
 # Wordlists & Fuzzing
 wfuzz==3.1.0
+
+# CVE and Exploit Search
+nvdlib==0.7.4
+shodan==1.31.0

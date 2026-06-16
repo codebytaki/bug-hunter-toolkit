@@ -134,6 +134,144 @@ def subdomain(domain, wordlist, output):
 
 
 @cli.command()
+@click.argument('keyword')
+@click.option('--limit', '-l', default=10, help='Maximum number of results')
+@click.option('--output', '-o', help='Output file (JSON format)')
+def cve(keyword, limit, output):
+    """
+    Search for CVEs by keyword
+    
+    Example: bug_hunter.py cve apache --limit 20
+    """
+    from src.exploit_finder.cve_searcher import CVESearcher
+    
+    console.print(f"\n[bold green]🔍 Searching CVEs...[/bold green]")
+    console.print(f"[cyan]Keyword:[/cyan] {keyword}")
+    console.print(f"[cyan]Limit:[/cyan] {limit}\n")
+    
+    try:
+        searcher = CVESearcher()
+        
+        with Progress() as progress:
+            task = progress.add_task("[cyan]Searching CVE databases...", total=100)
+            results = searcher.search_by_keyword(keyword, limit=limit)
+            progress.update(task, completed=100)
+        
+        if results:
+            display_cve_results(results)
+            
+            if output:
+                import json
+                with open(output, 'w') as f:
+                    json.dump(results, f, indent=2)
+                console.print(f"\n[green]✓[/green] Results saved to: {output}")
+        else:
+            console.print("[yellow]No CVEs found for the given keyword[/yellow]")
+        
+    except Exception as e:
+        console.print(f"[bold red]✗ Error:[/bold red] {str(e)}")
+        logger.error(f"CVE search error: {str(e)}")
+
+
+@cli.command()
+@click.argument('cve_id')
+def cveinfo(cve_id):
+    """
+    Get detailed information about a specific CVE
+    
+    Example: bug_hunter.py cveinfo CVE-2021-44228
+    """
+    from src.exploit_finder.cve_searcher import CVESearcher
+    
+    console.print(f"\n[bold green]📋 Fetching CVE Details...[/bold green]")
+    console.print(f"[cyan]CVE ID:[/cyan] {cve_id}\n")
+    
+    try:
+        searcher = CVESearcher()
+        cve_data = searcher.get_cve_details(cve_id)
+        
+        if cve_data:
+            display_cve_detail(cve_data)
+        else:
+            console.print(f"[yellow]CVE {cve_id} not found[/yellow]")
+        
+    except Exception as e:
+        console.print(f"[bold red]✗ Error:[/bold red] {str(e)}")
+
+
+@cli.command()
+@click.argument('keyword')
+@click.option('--limit', '-l', default=20, help='Maximum number of results')
+def exploit(keyword, limit):
+    """
+    Search for exploits by keyword
+    
+    Example: bug_hunter.py exploit wordpress
+    """
+    from src.exploit_finder.exploitdb_searcher import ExploitAggregator
+    
+    console.print(f"\n[bold green]💣 Searching Exploits...[/bold green]")
+    console.print(f"[cyan]Keyword:[/cyan] {keyword}\n")
+    
+    try:
+        aggregator = ExploitAggregator()
+        results = aggregator.search_all_sources(keyword)
+        
+        display_exploit_results(results)
+        
+    except Exception as e:
+        console.print(f"[bold red]✗ Error:[/bold red] {str(e)}")
+
+
+@cli.command()
+@click.argument('keyword')
+@click.option('--output', '-o', help='Output file')
+def hunt(keyword, output):
+    """
+    Comprehensive hunt: CVEs + Exploits + Vulnerabilities
+    
+    Example: bug_hunter.py hunt apache
+    """
+    from src.exploit_finder.cve_searcher import CVESearcher
+    from src.exploit_finder.exploitdb_searcher import ExploitAggregator
+    
+    console.print(f"\n[bold green]🎯 Starting Comprehensive Hunt...[/bold green]")
+    console.print(f"[cyan]Target:[/cyan] {keyword}\n")
+    
+    try:
+        # Search CVEs
+        console.print("[bold cyan]1. Searching CVEs...[/bold cyan]")
+        cve_searcher = CVESearcher()
+        cves = cve_searcher.search_exploitable_cves(keyword)
+        console.print(f"   Found {len(cves)} exploitable CVEs\n")
+        
+        # Search Exploits
+        console.print("[bold cyan]2. Searching Exploits...[/bold cyan]")
+        exploit_agg = ExploitAggregator()
+        exploits = exploit_agg.search_all_sources(keyword)
+        console.print(f"   Exploit sources aggregated\n")
+        
+        # Display summary
+        console.print("[bold cyan]3. Hunt Summary[/bold cyan]")
+        display_hunt_summary(keyword, cves, exploits)
+        
+        if output:
+            import json
+            hunt_results = {
+                'keyword': keyword,
+                'cves': cves,
+                'exploits': exploits,
+                'timestamp': datetime.now().isoformat()
+            }
+            with open(output, 'w') as f:
+                json.dump(hunt_results, f, indent=2)
+            console.print(f"\n[green]✓[/green] Hunt results saved to: {output}")
+        
+    except Exception as e:
+        console.print(f"[bold red]✗ Error:[/bold red] {str(e)}")
+
+
+@cli.command()
 @click.argument('target')
 @click.option('--ports', '-p', default='1-1000', help='Port range to scan')
 def portscan(target, ports):
@@ -203,6 +341,97 @@ def display_web_test_results(results):
                 )
             
             console.print(table)
+
+
+def display_cve_results(results):
+    """Display CVE search results in a table"""
+    table = Table(title="CVE Search Results", show_header=True, header_style="bold magenta")
+    table.add_column("CVE ID", style="cyan", width=20)
+    table.add_column("CVSS", style="yellow", width=8)
+    table.add_column("Published", style="green", width=12)
+    table.add_column("Summary", style="white")
+    
+    for cve in results:
+        cvss = str(cve.get('cvss', 'N/A'))
+        cvss_color = 'red' if cvss != 'N/A' and float(cvss) >= 7.0 else 'yellow'
+        
+        table.add_row(
+            cve.get('cve_id', 'N/A'),
+            f"[{cvss_color}]{cvss}[/{cvss_color}]",
+            cve.get('published', 'N/A')[:10],
+            cve.get('summary', 'No summary')[:80] + '...'
+        )
+    
+    console.print(table)
+
+
+def display_cve_detail(cve_data):
+    """Display detailed CVE information"""
+    console.print(Panel.fit(
+        f"[bold cyan]{cve_data.get('cve_id', 'N/A')}[/bold cyan]\n"
+        f"[yellow]CVSS: {cve_data.get('cvss', 'N/A')} | CWE: {cve_data.get('cwe', 'N/A')}[/yellow]",
+        border_style="cyan"
+    ))
+    
+    console.print(f"\n[bold]Summary:[/bold]")
+    console.print(f"  {cve_data.get('summary', 'No summary available')}\n")
+    
+    console.print(f"[bold]Published:[/bold] {cve_data.get('published', 'N/A')}")
+    console.print(f"[bold]Modified:[/bold] {cve_data.get('modified', 'N/A')}")
+    console.print(f"[bold]CVSS Vector:[/bold] {cve_data.get('cvss_vector', 'N/A')}\n")
+    
+    if cve_data.get('vulnerable_products'):
+        console.print(f"[bold]Vulnerable Products:[/bold]")
+        for product in cve_data.get('vulnerable_products', [])[:5]:
+            console.print(f"  • {product}")
+    
+    if cve_data.get('references'):
+        console.print(f"\n[bold]References:[/bold]")
+        for ref in cve_data.get('references', [])[:5]:
+            console.print(f"  • {ref}")
+
+
+def display_exploit_results(results):
+    """Display exploit search results"""
+    console.print(Panel.fit(
+        f"[bold cyan]Exploit Search: {results.get('keyword', 'N/A')}[/bold cyan]",
+        border_style="cyan"
+    ))
+    
+    console.print(f"\n[bold]Recommended Commands:[/bold]")
+    console.print(f"  [cyan]SearchSploit:[/cyan] {results.get('searchsploit_command', 'N/A')}")
+    
+    if results.get('recommendations'):
+        console.print(f"\n[bold]Additional Resources:[/bold]")
+        for rec in results.get('recommendations', []):
+            console.print(f"  • {rec}")
+
+
+def display_hunt_summary(keyword, cves, exploits):
+    """Display comprehensive hunt summary"""
+    table = Table(title=f"Hunt Summary: {keyword}", show_header=True)
+    table.add_column("Category", style="cyan", width=20)
+    table.add_column("Count", style="yellow", width=10)
+    table.add_column("Details", style="white")
+    
+    table.add_row(
+        "Exploitable CVEs",
+        str(len(cves)),
+        f"{len([c for c in cves if c.get('has_exploit')])} with known exploits"
+    )
+    
+    table.add_row(
+        "Exploit Sources",
+        "Multiple",
+        "Exploit-DB, Metasploit, GitHub"
+    )
+    
+    console.print(table)
+    
+    if cves:
+        console.print(f"\n[bold]Top CVEs:[/bold]")
+        for cve in cves[:5]:
+            console.print(f"  • {cve.get('cve_id')} (CVSS: {cve.get('cvss', 'N/A')})")
 
 
 if __name__ == '__main__':

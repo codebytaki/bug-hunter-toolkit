@@ -1,256 +1,311 @@
-# 🛡️ Bug Hunter Toolkit
+<div align="center">
+
+<img src="https://capsule-render.vercel.app/api?type=waving&color=0:0d1117,50:8b0000,100:0d1117&height=200&section=header&text=Bug%20Hunter%20Toolkit&fontSize=45&fontColor=ff6b6b&fontAlignY=38&desc=Professional%20Security%20Research%20%7C%20Bug%20Bounty%20%7C%20Recon%20%7C%20AI-Powered&descSize=17&descAlignY=58&descColor=8b949e&animation=fadeIn" />
+
+</div>
 
 <div align="center">
 
-![Version](https://img.shields.io/badge/version-2.0.0-blue.svg)
-![Python](https://img.shields.io/badge/python-3.11+-green.svg)
-![License](https://img.shields.io/badge/license-MIT-green.svg)
-![Security](https://img.shields.io/badge/security-testing-red.svg)
+[![Python](https://img.shields.io/badge/Python-3.11+-3776AB?style=flat-square&logo=python&logoColor=white)](https://python.org)
+[![Version](https://img.shields.io/badge/Version-3.0.0-red?style=flat-square)](https://github.com/codebytaki/bug-hunter-toolkit/releases)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green?style=flat-square)](LICENSE)
+[![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?style=flat-square&logo=docker&logoColor=white)](https://docker.com)
+[![Stars](https://img.shields.io/github/stars/codebytaki/bug-hunter-toolkit?style=flat-square&color=yellow)](https://github.com/codebytaki/bug-hunter-toolkit/stargazers)
+[![Issues](https://img.shields.io/github/issues/codebytaki/bug-hunter-toolkit?style=flat-square)](https://github.com/codebytaki/bug-hunter-toolkit/issues)
+[![Security](https://img.shields.io/badge/ethical-use%20only-critical?style=flat-square)](SECURITY.md)
 
-**Professional Security Testing & Bug Bounty Toolkit**
+**Production-ready security testing and bug bounty toolkit with AI-powered vulnerability intelligence, CVE search, exploit discovery, and automated reporting.**
 
-A comprehensive, production-ready security testing and bug hunting toolkit built with Python. Designed for security researchers, penetration testers, and bug bounty hunters to automate vulnerability detection and security assessments.
-
-[Features](#-features) • [Installation](#-installation) • [Usage](#-usage) • [Documentation](#-documentation)
+[🚀 Quick Start](#-quick-start) · [✨ Features](#-features) · [🗺️ Methodology](#️-hunt-methodology) · [📖 Modules](#-modules) · [🤝 Contributing](#-contributing)
 
 </div>
+
+> ⚠️ **For authorized security testing only.** Always get written permission before testing any system.
 
 ---
 
 ## ✨ Features
 
-- 🔍 **Vulnerability Scanner** - Automated security vulnerability detection
-- 🌐 **Web Application Testing** - XSS, SQLi, CSRF detection
-- 📡 **Network Scanning** - Port scanning and service enumeration
-- 🔐 **Password Testing** - Brute force and dictionary attack tools
-- 📝 **Report Generation** - Detailed security reports with recommendations
-- 🎯 **Target Discovery** - Subdomain enumeration and asset discovery
-- ⚡ **Multi-threading** - Fast parallel scanning capabilities
-- 📊 **Dashboard** - Real-time monitoring of security tests
+<table>
+<tr>
+<td width="50%">
 
-## ⚠️ Disclaimer
+**🔍 Recon & Discovery**
+- Subdomain enumeration
+- Port scanning & service detection
+- Directory & parameter discovery
+- JavaScript file analysis
+- Wayback Machine mining
 
-**This toolkit is designed for authorized security testing only.** Always ensure you have proper authorization before testing any system. Unauthorized access to computer systems is illegal.
+</td>
+<td width="50%">
 
-## 🚀 Installation
+**🧪 Vulnerability Testing**
+- XSS, SQLi, CSRF, SSRF detection
+- CORS misconfiguration checks
+- Open redirect testing
+- Auth bypass techniques
+- Business logic fuzzing
+
+</td>
+</tr>
+<tr>
+<td width="50%">
+
+**🧠 AI-Powered Intelligence**
+- CVE database search (NVD, CIRCL)
+- Exploit-DB integration
+- AI severity prediction
+- Smart target prioritization
+- Automated report generation
+
+</td>
+<td width="50%">
+
+**📊 Reporting**
+- HTML dashboard with charts
+- Executive summary
+- POC + CVSS scoring
+- JSON / Markdown export
+- Evidence screenshot capture
+
+</td>
+</tr>
+</table>
+
+---
+
+## 🗺️ Hunt Methodology
+
+```
+Target
+  │
+  ▼
+🔭 Recon
+  ├── Subdomain Enumeration (subfinder, amass)
+  ├── Port Scan (nmap)
+  └── Tech Fingerprinting
+  │
+  ▼
+📡 Enumeration
+  ├── Directory Discovery (ffuf)
+  ├── JS File Analysis
+  └── Parameter Discovery (gau, katana)
+  │
+  ▼
+🧪 Discovery & Testing
+  ├── XSS / SQLi / SSRF / CORS
+  ├── Auth Bypass
+  └── Business Logic
+  │
+  ▼
+🔍 CVE & Exploit Intelligence
+  ├── CVE Search (NVD, CIRCL)
+  ├── Exploit-DB Lookup
+  └── CVSS Scoring
+  │
+  ▼
+📝 Validation & Reporting
+  ├── POC Creation
+  ├── Impact Assessment
+  └── HTML/JSON/Markdown Report
+```
+
+---
+
+## 🚀 Quick Start
 
 ```bash
-# Clone the repository
+# Clone
 git clone https://github.com/codebytaki/bug-hunter-toolkit.git
 cd bug-hunter-toolkit
 
-# Create virtual environment (recommended)
+# Setup
 python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-
-# Install dependencies
+source venv/bin/activate        # Windows: venv\Scripts\activate
 pip install -r requirements.txt
+
+# Run full hunt
+python bug_hunter.py hunt target.com --output results.json
 ```
+
+### Or with Docker
+
+```bash
+docker build -t bug-hunter .
+docker run -it bug-hunter hunt target.com
+```
+
+---
 
 ## 💡 Usage
 
-### Basic Vulnerability Scan
+### Full Automated Hunt (one command)
 
-```python
-from bug_hunter import VulnerabilityScanner
-
-# Initialize scanner
-scanner = VulnerabilityScanner(target="https://example.com")
-
-# Run comprehensive scan
-results = scanner.scan()
-
-# Generate report
-scanner.generate_report("report.md")
+```bash
+python bug_hunter.py hunt target.com --output report.html
 ```
 
-### Web Application Testing
+Generates: `report.html` · `report.json` · `findings.md` · screenshots
 
-```python
-from bug_hunter import WebAppTester
+### CVE Intelligence
 
-# Test for common vulnerabilities
-tester = WebAppTester("https://target.com")
+```bash
+# Search CVEs by keyword
+python bug_hunter.py cve apache --limit 20
 
-# Test for XSS
-xss_results = tester.test_xss()
+# Get specific CVE details
+python bug_hunter.py cveinfo CVE-2021-44228
 
-# Test for SQL Injection
-sqli_results = tester.test_sqli()
-
-# Test for CSRF
-csrf_results = tester.test_csrf()
+# Save results
+python bug_hunter.py cve wordpress --output cves.json
 ```
 
-### Subdomain Enumeration
+### Exploit Discovery
 
-```python
-from bug_hunter import SubdomainFinder
+```bash
+# Find exploits
+python bug_hunter.py exploit wordpress
 
-# Find subdomains
-finder = SubdomainFinder(domain="example.com")
-subdomains = finder.enumerate()
-
-print(f"Found {len(subdomains)} subdomains")
+# Combined CVE + Exploit hunt
+python bug_hunter.py hunt apache --output hunt.json
 ```
 
-## 🛠️ Modules
+### Python API
 
-### 1. **Vulnerability Scanner**
-- OWASP Top 10 detection
-- Common CVE checking
-- Configuration analysis
+```python
+from bug_hunter import SecurityAssessment
 
-### 2. **Web Application Tester**
-- Cross-Site Scripting (XSS)
-- SQL Injection (SQLi)
-- Cross-Site Request Forgery (CSRF)
-- Security Headers Analysis
-- Cookie Security Testing
+assessment = SecurityAssessment(
+    target="https://target.com",
+    scope=["web", "network", "config"]
+)
+results = assessment.run()
+assessment.export_report("report.html")
+```
 
-### 3. **Network Scanner**
-- Port Scanning
-- Service Detection
-- OS Fingerprinting
-- Vulnerability Mapping
+---
 
-### 4. **Password Auditor**
-- Brute Force Attacks
-- Dictionary Attacks
-- Password Policy Testing
-- Credential Stuffing Detection
+## 📦 Tool Coverage
 
-### 5. **Report Generator**
-- Markdown Reports
-- HTML Reports
-- JSON Export
-- PDF Generation
+| Tool | Included | Purpose |
+|------|----------|---------|
+| subfinder | ✅ | Subdomain enumeration |
+| httpx | ✅ | HTTP probing |
+| katana | ✅ | JS crawling |
+| gau | ✅ | URL discovery |
+| ffuf | ✅ | Directory fuzzing |
+| nuclei | ✅ | Vulnerability templates |
+| NVD / CIRCL | ✅ | CVE databases |
+| Exploit-DB | ✅ | Exploit search |
+
+---
+
+## 🛡️ OWASP / CVE Coverage
+
+| Category | Covered |
+|----------|---------|
+| OWASP Top 10 (2021) | ✅ Full |
+| MITRE ATT&CK | ✅ Mapped |
+| CWE Classification | ✅ |
+| CVSS v3 Scoring | ✅ |
+| CVE Cross-reference | ✅ |
+
+---
 
 ## 📁 Project Structure
 
 ```
 bug-hunter-toolkit/
 ├── src/
-│   ├── scanner/            # Vulnerability scanners
-│   ├── web_tester/         # Web application testing
-│   ├── network/            # Network scanning tools
-│   ├── reports/            # Report generation
-│   └── utils/              # Utility functions
-├── wordlists/              # Security wordlists
-├── templates/              # Report templates
-├── config/                 # Configuration files
-├── tests/                  # Test suite
-└── examples/               # Usage examples
+│   ├── scanner/               # Core vulnerability scanners
+│   ├── web_tester/            # XSS, SQLi, CSRF, CORS
+│   ├── network/               # Port scan, service detection
+│   ├── exploit_finder/        # CVE + Exploit search
+│   │   ├── cve_searcher.py
+│   │   └── exploitdb_searcher.py
+│   ├── reports/               # Report generation
+│   └── utils/                 # Helpers & utilities
+├── claude-bughunter/          # Advanced methodology framework
+│   ├── commands/              # Hunt commands
+│   ├── skills/                # Specialized hunt skills (50+)
+│   └── docs/                  # Architecture & guides
+├── wordlists/                 # Security wordlists
+├── examples/                  # Usage examples
+├── tests/                     # Test suite
+├── docs/                      # Documentation
+├── .github/
+│   ├── ISSUE_TEMPLATE/
+│   └── PULL_REQUEST_TEMPLATE.md
+├── bug_hunter.py              # Main CLI entry
+├── CHANGELOG.md
+├── CONTRIBUTING.md
+├── SECURITY.md
+└── CODE_OF_CONDUCT.md
 ```
 
-## 🎯 Example: Full Security Assessment
+---
 
-```python
-from bug_hunter import SecurityAssessment
+## 🗺️ Roadmap
 
-# Create assessment
-assessment = SecurityAssessment(
-    target="https://target.com",
-    scope=["web", "network", "config"]
-)
+- [x] Core vulnerability scanner
+- [x] CVE & Exploit-DB integration
+- [x] Claude-BugHunter methodology
+- [x] Docker support
+- [ ] 🧠 AI Executive Report Generator (v3.1)
+- [ ] 📊 HTML Dashboard with charts (v3.1)
+- [ ] 🔐 JWT / OAuth attack module (v3.2)
+- [ ] 🌐 Web3 / Smart Contract auditing (v3.2)
+- [ ] 🤖 LLM-powered recon suggestions (v4.0)
+- [ ] 🏆 HackerOne / Bugcrowd API integration (v4.0)
 
-# Run assessment
-results = assessment.run()
-
-# View findings
-assessment.print_findings()
-
-# Export report
-assessment.export_report("security_assessment.pdf")
-```
-
-## 📊 Sample Output
-
-```
-[+] Target: https://example.com
-[+] Scan initiated at: 2026-04-14 10:30:00
-
-[🔍] Testing for XSS vulnerabilities...
-    [!] Found Reflected XSS in: /search?q=<script>alert(1)</script>
-    
-[🔍] Testing for SQL Injection...
-    [✓] No SQLi vulnerabilities found
-    
-[🔍] Checking security headers...
-    [!] Missing: X-Frame-Options
-    [!] Missing: Content-Security-Policy
-    
-[+] Scan completed at: 2026-04-14 10:35:00
-[+] Total vulnerabilities found: 3
-[+] Report saved to: report.md
-```
+---
 
 ## 🧪 Testing
 
 ```bash
-# Run all tests
-pytest tests/
-
-# Run with coverage
-pytest --cov=src tests/
-
-# Run specific test category
-pytest tests/test_web_scanner.py
+pytest tests/ -v
+pytest tests/ --cov=src --cov-report=html
 ```
 
-## 🤝 Responsible Disclosure
+---
 
-If you discover vulnerabilities using this toolkit:
-
-1. **Do not exploit** the vulnerability
-2. **Document** your findings
-3. **Report** to the organization/security team
-4. **Wait** for patch before public disclosure
-
-## 📚 Learning Resources
+## 📚 Resources
 
 - [OWASP Testing Guide](https://owasp.org/www-project-web-security-testing-guide/)
-- [Bug Bounty Hunting Basics](https://www.hackerone.com/bug-bounty-basics)
-- [Web Security Academy](https://portswigger.net/web-security)
-- [NIST Cybersecurity Framework](https://www.nist.gov/cyberframework)
+- [PortSwigger Web Security Academy](https://portswigger.net/web-security)
+- [HackerOne Hacktivity](https://hackerone.com/hacktivity)
+- [Bug Bounty Platforms](https://github.com/codebytaki/bug-hunter-toolkit/wiki)
 
-## ⚖️ Legal Notice
-
-This tool is for **educational and authorized testing purposes only**. The developers are not responsible for any misuse or damage caused by this program. Always:
-
-- ✅ Get written authorization before testing
-- ✅ Stay within the defined scope
-- ✅ Follow responsible disclosure practices
-- ✅ Respect privacy and data protection laws
+---
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please help improve this toolkit:
+See [CONTRIBUTING.md](CONTRIBUTING.md). All contributions welcome — bug fixes, new modules, wordlists, or docs.
 
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/security-feature`)
-3. Commit your changes (`git commit -m 'Add security feature'`)
-4. Push to the branch (`git push origin feature/security-feature`)
-5. Open a Pull Request
+---
+
+## 🛡️ Responsible Disclosure
+
+1. Get **written authorization** before testing
+2. Document findings carefully
+3. Report to the organization first
+4. Follow responsible disclosure — see [SECURITY.md](SECURITY.md)
+
+---
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 📫 Contact
-
-Taki - [@codebytaki](https://github.com/codebytaki)
-
-Project Link: [https://github.com/codebytaki/bug-hunter-toolkit](https://github.com/codebytaki/bug-hunter-toolkit)
+MIT © [Taki](https://github.com/codebytaki) — see [LICENSE](LICENSE)
 
 ---
 
 <div align="center">
 
-**🔐 Security Testing Tool by Taki**
+**Built with ❤️ by [codebytaki](https://github.com/codebytaki)**
 
-⭐ Star this repo if you find it helpful!
+⭐ Star this repo if it helped your bug bounty journey!
 
-**Use responsibly and ethically!**
+<img src="https://capsule-render.vercel.app/api?type=waving&color=0:0d1117,50:8b0000,100:0d1117&height=80&section=footer" />
 
 </div>
