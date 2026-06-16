@@ -11,6 +11,8 @@ from rich.panel import Panel
 from rich.progress import Progress
 from loguru import logger
 import sys
+import json
+from pathlib import Path
 from datetime import datetime
 
 # Configure logger
@@ -113,24 +115,51 @@ def webtest(target, test, output):
 
 @cli.command()
 @click.argument('domain')
-@click.option('--wordlist', '-w', help='Custom wordlist file')
+@click.option('--wordlist', '-w', help='Custom wordlist file path')
+@click.option('--threads', '-t', default=30, help='Concurrent DNS workers')
 @click.option('--output', '-o', default='subdomains.txt', help='Output file')
-def subdomain(domain, wordlist, output):
+def subdomain(domain, wordlist, threads, output):
     """
-    Enumerate subdomains for target domain
-    
+    Enumerate subdomains via DNS bruteforce + certificate transparency logs.
+
     Example: bug_hunter.py subdomain example.com
     """
+    from src.subdomain import SubdomainEnumerator
+
     console.print(f"\n[bold green]🔎 Enumerating subdomains...[/bold green]")
-    console.print(f"[cyan]Domain:[/cyan] {domain}\n")
-    
+    console.print(f"[cyan]Domain:[/cyan] {domain}")
+    console.print(f"[cyan]Threads:[/cyan] {threads}\n")
+
     try:
-        # Subdomain enumeration logic here
-        console.print("[yellow]Subdomain enumeration in progress...[/yellow]")
-        console.print(f"\n[green]✓[/green] Results saved to: {output}")
-        
+        enumerator = SubdomainEnumerator(domain, threads=threads)
+
+        custom_words = None
+        if wordlist:
+            import pathlib
+            custom_words = [w.strip() for w in pathlib.Path(wordlist).read_text().splitlines() if w.strip()]
+            console.print(f"[cyan]Wordlist:[/cyan] {wordlist} ({len(custom_words)} words)\n")
+
+        with Progress() as progress:
+            task = progress.add_task("[cyan]Resolving subdomains...", total=100)
+            results = enumerator.enumerate(wordlist=custom_words)
+            progress.update(task, completed=100)
+
+        if results:
+            table = Table(title=f"Subdomains — {domain}", show_header=True, header_style="bold magenta")
+            table.add_column("Subdomain", style="cyan")
+            table.add_column("IP Address", style="yellow")
+            table.add_column("Method", style="green")
+            for entry in results:
+                table.add_row(entry["subdomain"], entry.get("ip", "N/A"), entry["method"])
+            console.print(table)
+            enumerator.save(output)
+            console.print(f"\n[green]✓[/green] {len(results)} subdomains saved to: {output}")
+        else:
+            console.print("[yellow]No subdomains found.[/yellow]")
+
     except Exception as e:
         console.print(f"[bold red]✗ Error:[/bold red] {str(e)}")
+        logger.error(f"Subdomain error: {str(e)}")
 
 
 @cli.command()
@@ -273,23 +302,95 @@ def hunt(keyword, output):
 
 @cli.command()
 @click.argument('target')
-@click.option('--ports', '-p', default='1-1000', help='Port range to scan')
-def portscan(target, ports):
+@click.option('--ports', '-p', default='1-1024', help='Port range: "1-1024" or "80,443,8080"')
+@click.option('--threads', '-t', default=100, help='Concurrent scan workers')
+@click.option('--no-banners', is_flag=True, help='Skip banner grabbing (faster)')
+@click.option('--output', '-o', help='Output file (JSON)')
+def portscan(target, ports, threads, no_banners, output):
     """
-    Scan target for open ports
-    
-    Example: bug_hunter.py portscan 192.168.1.1 --ports 1-1000
+    TCP port scanner with banner grabbing.
+
+    Example: bug_hunter.py portscan 192.168.1.1 --ports 1-1024
     """
+    from src.network import PortScanner
+
     console.print(f"\n[bold green]🔌 Starting port scan...[/bold green]")
     console.print(f"[cyan]Target:[/cyan] {target}")
-    console.print(f"[cyan]Ports:[/cyan] {ports}\n")
-    
+    console.print(f"[cyan]Ports:[/cyan] {ports}")
+    console.print(f"[cyan]Threads:[/cyan] {threads}\n")
+
     try:
-        # Port scanning logic here
-        console.print("[yellow]Port scanning in progress...[/yellow]")
-        
+        scanner = PortScanner(target, port_range=ports, threads=threads, grab_banners=not no_banners)
+
+        with Progress() as progress:
+            task = progress.add_task("[cyan]Scanning ports...", total=100)
+            results = scanner.scan()
+            progress.update(task, completed=100)
+
+        if "error" in results:
+            console.print(f"[bold red]✗ Error:[/bold red] {results['error']}")
+            return
+
+        open_ports = results.get("open_ports", [])
+        summary = results.get("summary", {})
+
+        if open_ports:
+            table = Table(title=f"Open Ports — {target}", show_header=True, header_style="bold magenta")
+            table.add_column("Port", style="cyan", width=8)
+            table.add_column("Service", style="yellow", width=16)
+            table.add_column("Banner", style="white")
+            for p in open_ports:
+                table.add_row(str(p["port"]), p["service"], p.get("banner", "")[:80])
+            console.print(table)
+
+        console.print(f"\n[bold]Summary:[/bold]")
+        console.print(f"  Open ports: {summary.get('total_open', 0)}")
+        console.print(f"  Risk level: [{'red' if summary.get('risk_level') == 'High' else 'yellow'}]{summary.get('risk_level','N/A')}[/{'red' if summary.get('risk_level') == 'High' else 'yellow'}]")
+        if summary.get("risky_ports"):
+            console.print(f"  ⚠ Risky ports open: {summary['risky_ports']}")
+        console.print(f"  Scanned: {results.get('total_scanned',0)} ports in {results.get('scan_time_seconds',0)}s")
+
+        if output:
+            import json
+            Path(output).write_text(json.dumps(results, indent=2, default=str))
+            console.print(f"\n[green]✓[/green] Results saved to: {output}")
+
     except Exception as e:
         console.print(f"[bold red]✗ Error:[/bold red] {str(e)}")
+        logger.error(f"Port scan error: {str(e)}")
+
+
+@cli.command()
+@click.argument('json_file')
+@click.option('--format', 'fmt', type=click.Choice(['html', 'markdown', 'json']), default='html')
+@click.option('--output', '-o', help='Output file path')
+def report(json_file, fmt, output):
+    """
+    Generate a formatted report from a previous scan's JSON output.
+
+    Example: bug_hunter.py report scan_results.json --format html
+    """
+    from src.reports import ReportGenerator
+
+    try:
+        data = json.loads(Path(json_file).read_text())
+        gen = ReportGenerator(data, target=data.get("target", json_file))
+
+        if fmt == "html":
+            out = output or json_file.replace(".json", ".html")
+            gen.to_html(out)
+        elif fmt == "markdown":
+            out = output or json_file.replace(".json", ".md")
+            gen.to_markdown(out)
+        else:
+            out = output or json_file
+            gen.to_json(out)
+
+        console.print(f"[green]✓[/green] Report generated: {out}")
+
+    except Exception as e:
+        console.print(f"[bold red]✗ Error:[/bold red] {str(e)}")
+        logger.error(f"Report generation error: {str(e)}")
 
 
 def display_scan_results(results):
