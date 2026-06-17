@@ -67,7 +67,7 @@ class PortScanner:
         """
         try:
             self._resolved_ip = socket.gethostbyname(self.target)
-        except socket.gaierror as e:
+        except Exception as e:
             logger.error(f"Cannot resolve {self.target}: {e}")
             return {"error": str(e), "target": self.target}
 
