@@ -1,5 +1,5 @@
 # Bug Hunter Toolkit - Docker Image
-FROM python:3.11-slim
+FROM python:3.14-slim
 
 LABEL maintainer="Taki <codebytaki@github.com>"
 LABEL description="Professional Security Testing Toolkit"
