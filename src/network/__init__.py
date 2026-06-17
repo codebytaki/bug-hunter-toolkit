@@ -5,7 +5,7 @@ TCP port scanning, service banner grabbing, and basic OS fingerprinting
 
 import socket
 import concurrent.futures
-from typing import List, Dict, Optional, Tuple
+from typing import List, Dict, Optional
 from loguru import logger
 import time
 

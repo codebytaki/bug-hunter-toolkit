@@ -62,18 +62,18 @@ class ReportGenerator:
         """Generate a Markdown report."""
         summary = self._build_summary()
         lines: List[str] = [
-            f"# 🛡️ Security Assessment Report",
-            f"",
+            "# 🛡️ Security Assessment Report",
+            "",
             f"**Target:** `{self.target}`  ",
             f"**Generated:** {self.generated_at}  ",
-            f"**Tool:** Bug Hunter Toolkit v3",
-            f"",
-            f"---",
-            f"",
-            f"## Executive Summary",
-            f"",
-            f"| Severity | Count |",
-            f"|----------|-------|",
+            "**Tool:** Bug Hunter Toolkit v3",
+            "",
+            "---",
+            "",
+            "## Executive Summary",
+            "",
+            "| Severity | Count |",
+            "|----------|-------|",
         ]
         for sev in ["Critical", "High", "Medium", "Low", "Info"]:
             count = summary["by_severity"].get(sev, 0)
@@ -81,13 +81,13 @@ class ReportGenerator:
                 lines.append(f"| {sev} | {count} |")
 
         lines += [
-            f"",
+            "",
             f"**Total findings:** {summary['total']}",
-            f"",
-            f"---",
-            f"",
-            f"## Findings",
-            f"",
+            "",
+            "---",
+            "",
+            "## Findings",
+            "",
         ]
 
         for i, vuln in enumerate(self._all_vulns, 1):
